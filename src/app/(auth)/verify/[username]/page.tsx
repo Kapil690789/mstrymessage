@@ -62,7 +62,7 @@ export default function VerifyAccount() {
         description: response.data.message,
       });
 
-      router.replace('/sign-in'); // Redirect to dashboard or homepage
+      router.replace('/sign-in');
     } catch (error) {
       const axiosError = error as AxiosError<ApiResponse>;
       toast({
@@ -97,12 +97,29 @@ export default function VerifyAccount() {
                 </FormItem>
               )}
             />
-            <Button type="submit">Verify</Button>
+            <Button
+              type="submit"
+              className="w-full bg-black text-white hover:bg-white hover:text-black border border-black transition-colors duration-300"
+            >
+              Verify
+            </Button>
           </form>
         </Form>
-        <Button variant="secondary" onClick={skipVerification} className="w-full">
-          Skip Verification
-        </Button>
+        <div className="text-center mt-4">
+          <p className="text-sm text-gray-600 font-semibold mb-2">
+            <span className="text-black font-bold">
+              If you cannot receive the verification code,
+            </span>{' '}
+            you can skip it and move to the sign-up page.
+          </p>
+          <Button
+            variant="secondary"
+            onClick={skipVerification}
+            className="w-full bg-black text-white hover:bg-white hover:text-black border border-black transition-colors duration-300"
+          >
+            Skip Verification
+          </Button>
+        </div>
       </div>
     </div>
   );
