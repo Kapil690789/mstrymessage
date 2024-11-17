@@ -51,6 +51,30 @@ export default function VerifyAccount() {
     }
   };
 
+  const skipVerification = async () => {
+    try {
+      const response = await axios.post<ApiResponse>(`/api/skip-verification`, {
+        username: params.username,
+      });
+
+      toast({
+        title: 'Verification Skipped',
+        description: response.data.message,
+      });
+
+      router.replace('/sign-in'); // Redirect to dashboard or homepage
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiResponse>;
+      toast({
+        title: 'Error',
+        description:
+          axiosError.response?.data.message ??
+          'An error occurred. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
@@ -76,6 +100,9 @@ export default function VerifyAccount() {
             <Button type="submit">Verify</Button>
           </form>
         </Form>
+        <Button variant="secondary" onClick={skipVerification} className="w-full">
+          Skip Verification
+        </Button>
       </div>
     </div>
   );
