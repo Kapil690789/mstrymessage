@@ -1,6 +1,6 @@
 'use client';
 
-import  { MessageCard } from '@/components/MessageCard';
+import { MessageCard } from '@/components/MessageCard';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
@@ -20,6 +20,7 @@ function UserDashboard() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSwitchLoading, setIsSwitchLoading] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
   const { toast } = useToast();
 
@@ -91,6 +92,12 @@ function UserDashboard() {
     fetchMessages();
 
     fetchAcceptMessages();
+
+    // Check localStorage for theme preference
+    const storedTheme = localStorage.getItem('theme');
+    if (storedTheme) {
+      setIsDarkMode(storedTheme === 'dark');
+    }
   }, [session, setValue, toast, fetchAcceptMessages, fetchMessages]);
 
   // Handle switch change
@@ -116,6 +123,24 @@ function UserDashboard() {
     }
   };
 
+  // Toggle Theme
+  const toggleTheme = () => {
+    setIsDarkMode((prev) => {
+      const newTheme = !prev;
+      localStorage.setItem('theme', newTheme ? 'dark' : 'light'); // Save theme to localStorage
+      return newTheme;
+    });
+  };
+
+  // Apply Dark Mode class to the body element
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
   if (!session || !session.user) {
     return <div></div>;
   }
@@ -134,8 +159,22 @@ function UserDashboard() {
   };
 
   return (
-    <div className="my-8 mx-4 md:mx-8 lg:mx-auto p-6 bg-white rounded w-full max-w-6xl">
+    <div className="my-8 mx-4 md:mx-8 lg:mx-auto p-6 bg-white rounded w-full max-w-6xl dark:bg-gray-900 dark:text-white">
       <h1 className="text-4xl font-bold mb-4">User Dashboard</h1>
+
+      {/* Light/Dark Theme Toggle */}
+      <div className="flex items-center mb-4">
+        <span className="mr-2 text-sm">Light</span>
+        <div
+          onClick={toggleTheme}
+          className="flex items-center cursor-pointer w-16 h-8 rounded-full p-1 border-2 border-gray-400 bg-gray-300 dark:border-gray-600 dark:bg-gray-700 transition-all"
+        >
+          <div
+            className={`w-6 h-6 bg-white rounded-full transition-all duration-300 ease-in-out ${isDarkMode ? 'translate-x-8' : 'translate-x-0'}`}
+          />
+        </div>
+        <span className="ml-2 text-sm">Dark</span>
+      </div>
 
       <div className="mb-4">
         <h2 className="text-lg font-semibold mb-2">Copy Your Unique Link</h2>{' '}
@@ -144,7 +183,7 @@ function UserDashboard() {
             type="text"
             value={profileUrl}
             disabled
-            className="input input-bordered w-full p-2 mr-2"
+            className="input input-bordered w-full p-2 mr-2 dark:bg-gray-700 dark:text-white"
           />
           <Button onClick={copyToClipboard}>Copy</Button>
         </div>
@@ -157,9 +196,7 @@ function UserDashboard() {
           onCheckedChange={handleSwitchChange}
           disabled={isSwitchLoading}
         />
-        <span className="ml-2">
-          Accept Messages: {acceptMessages ? 'On' : 'Off'}
-        </span>
+        <span className="ml-2">Accept Messages: {acceptMessages ? 'On' : 'Off'}</span>
       </div>
       <Separator />
 

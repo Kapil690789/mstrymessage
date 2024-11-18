@@ -1,12 +1,25 @@
 import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import { NextResponse } from 'next/server';
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-
 export const runtime = 'edge';
+
+const fallbackMessages = [
+  "What's your favorite movie?",
+  "Do you have any pets?",
+  "What's your dream job?",
+  "If you could travel anywhere, where would you go?",
+  "What's a book that changed your life?",
+  "Do you prefer the mountains or the beach?",
+  "What's your go-to comfort food?",
+  "What's the most interesting thing you've learned recently?",
+  "If you could master any skill instantly, what would it be?",
+  "What's a small thing that always makes you smile?",
+];
 
 export async function POST(req: Request) {
   try {
@@ -15,24 +28,26 @@ export async function POST(req: Request) {
 
     const response = await openai.completions.create({
       model: 'gpt-3.5-turbo-instruct',
-      max_tokens: 5,
+      max_tokens: 100,
       stream: true,
       prompt,
     });
 
     const stream = OpenAIStream(response);
-    
-    
     return new StreamingTextResponse(stream);
   } catch (error) {
-    if (error instanceof OpenAI.APIError) {
-      // OpenAI API error handling
-      const { name, status, headers, message } = error;
-      return NextResponse.json({ name, status, headers, message }, { status });
+    if (error instanceof OpenAI.APIError && error.status === 429) {
+      console.warn('Rate limit exceeded. Falling back to predefined messages.');
+      return NextResponse.json(
+        { fallbackMessages: fallbackMessages.join('||') },
+        { status: 200 }
+      );
     } else {
-      // General error handling
-      console.error('An unexpected error occurred:', error);
-      throw error;
+      console.error('Unexpected error occurred:', error);
+      return NextResponse.json(
+        { error: 'Failed to generate suggestions' },
+        { status: 500 }
+      );
     }
   }
 }
