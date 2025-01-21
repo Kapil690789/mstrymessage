@@ -5,9 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useDebounce } from 'usehooks-ts';
 import * as z from 'zod';
-import { useDebounceCallback } from 'usehooks-ts'
-import { useToast } from "@/hooks/use-toast"
+
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -21,17 +21,17 @@ import axios, { AxiosError } from 'axios';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { signUpSchema } from '@/schemas/signUpSchema';
+import { signIn } from 'next-auth/react';
 
 export default function SignUpForm() {
   const [username, setUsername] = useState('');
   const [usernameMessage, setUsernameMessage] = useState('');
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const debounced = useDebounceCallback(setUsername, 300);
+  const debouncedUsername = useDebounce(username, 300);
 
-
-  const { toast } = useToast();
   const router = useRouter();
+
   const form = useForm<z.infer<typeof signUpSchema>>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -43,14 +43,13 @@ export default function SignUpForm() {
 
   useEffect(() => {
     const checkUsernameUnique = async () => {
-      if (username) {
+      if (debouncedUsername) {
         setIsCheckingUsername(true);
         setUsernameMessage(''); // Reset message
         try {
           const response = await axios.get<ApiResponse>(
-            `/api/check-username-unique?username=${username}`
+            `/api/check-username-unique?username=${debouncedUsername}`
           );
-          
           setUsernameMessage(response.data.message);
         } catch (error) {
           const axiosError = error as AxiosError<ApiResponse>;
@@ -63,37 +62,31 @@ export default function SignUpForm() {
       }
     };
     checkUsernameUnique();
-  }, [username]);
+  }, [debouncedUsername]);
 
   const onSubmit = async (data: z.infer<typeof signUpSchema>) => {
-    
     setIsSubmitting(true);
     try {
       const response = await axios.post<ApiResponse>('/api/sign-up', data);
-
-      toast({
-        title: 'Success',
-        description: response.data.message,
-      });
 
       router.replace(`/verify/${username}`);
 
       setIsSubmitting(false);
     } catch (error) {
       console.error('Error during sign-up:', error);
-      
-      const axiosError = error as AxiosError<ApiResponse>;
-
-      // Default error message
-      const errorMessage = axiosError.response?.data.message || 'There was a problem with your sign-up. Please try again.';
-
-      toast({
-        title: 'Sign Up Failed',
-        description: errorMessage,
-        variant: 'destructive',
-      });
-
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    const result = await signIn('credentials', {
+      redirect: false,
+      identifier: 'sher@gmail.com',
+      password: '12345678',
+    });
+
+    if (result?.url) {
+      router.replace('/dashboard');
     }
   };
 
@@ -118,10 +111,9 @@ export default function SignUpForm() {
                     {...field}
                     onChange={(e) => {
                       field.onChange(e);
-                      debounced(e.target.value);
+                      setUsername(e.target.value);
                     }}
                   />
-                  
                   {isCheckingUsername && <Loader2 className="animate-spin" />}
                   {!isCheckingUsername && usernameMessage && (
                     <p
@@ -145,7 +137,9 @@ export default function SignUpForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <Input {...field} name="email" />
-                  <p className='text-muted text-gray-400 text-sm'>We will send you a verification code</p>
+                  <p className="text-muted text-gray-400 text-sm">
+                    We will send you a verification code
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
@@ -162,7 +156,7 @@ export default function SignUpForm() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className='w-full' disabled={isSubmitting}>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -181,6 +175,14 @@ export default function SignUpForm() {
               Sign in
             </Link>
           </p>
+        </div>
+        <div className="text-center mt-6">
+          <button
+            onClick={handleGuestLogin}
+            className="w-full bg-blue-500 text-black font-semibold py-2 px-4 rounded-md shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400"
+          >
+            Guest Login
+          </button>
         </div>
       </div>
     </div>
