@@ -102,7 +102,7 @@ export default function SignInForm() {
         <div className="text-center mt-6">
           <button
             onClick={handleGuestLogin}
-            className="w-full bg-yellow-500 text-black font-semibold py-2 px-4 rounded-md shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400"
+            className="w-full bg-blue-500 text-black font-semibold py-2 px-4 rounded-md shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400"
           >
             Guest Login
           </button>
