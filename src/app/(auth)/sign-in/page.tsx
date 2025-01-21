@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
+
 import { signInSchema } from '@/schemas/signInSchema';
 
 export default function SignInForm() {
@@ -29,7 +29,6 @@ export default function SignInForm() {
     },
   });
 
-  const { toast } = useToast();
   const onSubmit = async (data: z.infer<typeof signInSchema>) => {
     const result = await signIn('credentials', {
       redirect: false,
@@ -37,21 +36,17 @@ export default function SignInForm() {
       password: data.password,
     });
 
-    if (result?.error) {
-      if (result.error === 'CredentialsSignin') {
-        toast({
-          title: 'Login Failed',
-          description: 'Incorrect username or password',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Error',
-          description: result.error,
-          variant: 'destructive',
-        });
-      }
+    if (result?.url) {
+      router.replace('/dashboard');
     }
+  };
+
+  const handleGuestLogin = async () => {
+    const result = await signIn('credentials', {
+      redirect: false,
+      identifier: 'sher@gmail.com',
+      password: '12345678',
+    });
 
     if (result?.url) {
       router.replace('/dashboard');
@@ -91,7 +86,9 @@ export default function SignInForm() {
                 </FormItem>
               )}
             />
-            <Button className='w-full' type="submit">Sign In</Button>
+            <Button className="w-full" type="submit">
+              Sign In
+            </Button>
           </form>
         </Form>
         <div className="text-center mt-4">
@@ -101,6 +98,14 @@ export default function SignInForm() {
               Sign up
             </Link>
           </p>
+        </div>
+        <div className="text-center mt-6">
+          <button
+            onClick={handleGuestLogin}
+            className="w-full bg-yellow-500 text-black font-semibold py-2 px-4 rounded-md shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400"
+          >
+            Guest Login
+          </button>
         </div>
       </div>
     </div>
