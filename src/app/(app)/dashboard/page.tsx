@@ -16,6 +16,16 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { AcceptMessageSchema } from '@/schemas/acceptMessageSchema';
 
+
+function SkeletonCard() {
+  return (
+    <div className="p-4 border rounded shadow-sm bg-gray-200 animate-pulse dark:bg-gray-700">
+      <div className="h-6 bg-gray-300 rounded dark:bg-gray-600 mb-2"></div>
+      <div className="h-4 bg-gray-300 rounded dark:bg-gray-600 mb-1"></div>
+      <div className="h-4 bg-gray-300 rounded dark:bg-gray-600 mb-1"></div>
+    </div>
+  );
+}
 function UserDashboard() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -214,6 +224,17 @@ function UserDashboard() {
           <RefreshCcw className="h-4 w-4" />
         )}
       </Button>
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {isLoading
+          ? Array.from({ length: 4 }).map((_, index) => <SkeletonCard key={index} />)
+          : messages.length > 0
+          ? messages.map((message) => (
+              <MessageCard key={message._id as string} message={message} onMessageDelete={function (messageId: string): void {
+              throw new Error('Function not implemented.');
+            } } />
+            ))
+          : !isLoading && <p>No messages to display.</p>}
+      </div>
       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
         {messages.length > 0 ? (
           messages.map((message) => (
